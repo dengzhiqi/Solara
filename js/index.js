@@ -3557,12 +3557,14 @@ function showNotification(message, type = "success") {
 
                 renderMultiPlaylistMenu();
                 multiPlaylistMenu.style.display = 'block';
+                multiPlaylistMenu.classList.add("show");
                 multiPlaylistBtn.setAttribute("aria-expanded", "true");
             }
         }
 
         function closePlaylistMenu() {
             multiPlaylistMenu.style.display = 'none';
+            multiPlaylistMenu.classList.remove("show");
             multiPlaylistBtn.setAttribute("aria-expanded", "false");
         }
 
