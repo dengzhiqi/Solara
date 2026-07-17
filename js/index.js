@@ -3602,12 +3602,15 @@ function showNotification(message, type = "success") {
                     ev.stopPropagation();
                     if (pl.id === 'default') {
                         if (confirm('确定要清空默认歌单吗？')) {
+                            if (state.activePlaylistId === 'default' && typeof clearPlaylist === "function") {
+                                clearPlaylist();
+                            } else if (state.activePlaylistId === 'default' && typeof renderPlaylist === "function") {
+                                state.playlistSongs = [];
+                                renderPlaylist();
+                            }
                             pl.songs = [];
                             savePlayerState();
                             renderMenu();
-                            if (state.activePlaylistId === 'default' && typeof renderPlaylist === "function") {
-                                renderPlaylist();
-                            }
                         }
                     } else {
                         if (confirm('确定要删除歌单 "' + pl.name + '" 吗？')) {
