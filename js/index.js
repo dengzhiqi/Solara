@@ -3253,14 +3253,22 @@ async function exploreOnlineMusic() {
         const songs = await API.getRadarPlaylist("3778678", { limit: 50, offset: 0 });
 
         if (songs.length > 0) {
-            // 将在线音乐添加到统一播放列表
-            state.playlistSongs = [...state.playlistSongs, ...songs];
-            state.onlineSongs = songs; // 保留原有的在线音乐列表
+            var defaultPl = state.playlists.find(function(p) { return p.id === 'default'; });
+            if (defaultPl) {
+                defaultPl.songs = [...defaultPl.songs, ...songs];
+                state.onlineSongs = songs; // 保留原有的在线音乐列表
 
-            // 更新播放列表显示
-            renderPlaylist();
+                if (state.activePlaylistId === 'default') {
+                    state.playlistSongs = defaultPl.songs;
+                    // 更新播放列表显示
+                    renderPlaylist();
+                }
+                
+                savePlayerState();
+                if (typeof renderMenu === "function") renderMenu();
+            }
 
-            showNotification(`已加载 ${songs.length} 首探索雷达歌曲到播放列表`);
+            showNotification(`已加载 ${songs.length} 首探索雷达歌曲到默认歌单`);
             debugLog(`加载探索雷达播放列表成功: ${songs.length} 首歌曲`);
         } else {
             showNotification("未找到在线音乐", "error");
