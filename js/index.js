@@ -3450,7 +3450,7 @@ function showNotification(message, type = "success") {
 }
 
 // --- 多播放列表逻辑 ---
-document.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("load", () => {
     const multiPlaylistBtn = document.getElementById("multiPlaylistBtn");
     const multiPlaylistMenu = document.getElementById("multiPlaylistMenu");
     
