@@ -3452,4 +3452,130 @@ function showNotification(message, type = "success") {
     }, 3000);
 }
 
+// --- 多播放列表逻辑 ---
+(function() {
+    // 延迟一点绑定以确保 DOM 已完成
+    let initAttempts = 0;
+    function tryInit() {
+        const multiPlaylistBtn = document.getElementById("multiPlaylistBtn");
+        const multiPlaylistMenu = document.getElementById("multiPlaylistMenu");
+        
+        if (!multiPlaylistBtn || !multiPlaylistMenu) {
+            if (initAttempts++ < 50) setTimeout(tryInit, 100);
+            return;
+        }
+
+        function renderMultiPlaylistMenu() {
+            multiPlaylistMenu.innerHTML = '';
+            state.playlists.forEach(pl => {
+                const item = document.createElement("div");
+                item.className = "source-menu-item";
+                if(pl.id === state.activePlaylistId) {
+                    item.classList.add("active");
+                    item.style.color = "var(--primary-color, #10b981)";
+                }
+                item.innerHTML = `
+                    <span>${pl.name} (${pl.songs.length})</span>
+                    ${pl.id !== 'default' ? '<i class="fas fa-trash delete-playlist" style="margin-left:auto; cursor: pointer; color: #ef4444; font-size:14px;" title="删除"></i>' : ''}
+                `;
+                
+                const delBtn = item.querySelector('.delete-playlist');
+                if (delBtn) {
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if(confirm(`确定要删除歌单 "${pl.name}" 吗？`)) {
+                            state.playlists = state.playlists.filter(p => p.id !== pl.id);
+                            if(state.activePlaylistId === pl.id) {
+                                switchPlaylist('default');
+                            } else {
+                                savePlayerState();
+                                renderMultiPlaylistMenu();
+                            }
+                        }
+                    });
+                }
+
+                item.addEventListener('click', () => {
+                    switchPlaylist(pl.id);
+                    closePlaylistMenu();
+                });
+                multiPlaylistMenu.appendChild(item);
+            });
+
+            const newBtn = document.createElement("div");
+            newBtn.className = "source-menu-item";
+            newBtn.style.borderTop = "1px solid rgba(255,255,255,0.1)";
+            newBtn.style.color = "var(--primary-color, #10b981)";
+            newBtn.style.justifyContent = "center";
+            newBtn.innerHTML = `<i class="fas fa-plus" style="margin-right: 8px;"></i> 新建播放列表`;
+            newBtn.addEventListener('click', () => {
+                closePlaylistMenu();
+                const name = prompt("请输入新播放列表名称：");
+                if (name && name.trim() !== '') {
+                    const newId = 'pl_' + Date.now();
+                    state.playlists.push({
+                        id: newId,
+                        name: name.trim(),
+                        songs: []
+                    });
+                    switchPlaylist(newId);
+                }
+            });
+            multiPlaylistMenu.appendChild(newBtn);
+        }
+
+        function switchPlaylist(id) {
+            const pl = state.playlists.find(p => p.id === id);
+            if(!pl) return;
+            state.activePlaylistId = id;
+            state.playlistSongs = pl.songs;
+            savePlayerState();
+            renderMultiPlaylistMenu();
+            if(typeof renderPlaylist === "function") {
+                renderPlaylist();
+            }
+        }
+
+        function togglePlaylistMenu(e) {
+            if(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const isExpanded = multiPlaylistBtn.getAttribute("aria-expanded") === "true";
+            if(isExpanded) {
+                closePlaylistMenu();
+            } else {
+                if (multiPlaylistMenu.parentNode !== document.body) {
+                    document.body.appendChild(multiPlaylistMenu);
+                    multiPlaylistMenu.style.position = 'fixed';
+                }
+                
+                const rect = multiPlaylistBtn.getBoundingClientRect();
+                multiPlaylistMenu.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+                multiPlaylistMenu.style.left = (rect.left + rect.width / 2) + 'px';
+                multiPlaylistMenu.style.transform = 'translateX(-50%)';
+
+                renderMultiPlaylistMenu();
+                multiPlaylistMenu.style.display = 'block';
+                multiPlaylistBtn.setAttribute("aria-expanded", "true");
+            }
+        }
+
+        function closePlaylistMenu() {
+            multiPlaylistMenu.style.display = 'none';
+            multiPlaylistBtn.setAttribute("aria-expanded", "false");
+        }
+
+        multiPlaylistBtn.addEventListener("click", togglePlaylistMenu);
+        
+        document.addEventListener("click", (e) => {
+            if (e.target !== multiPlaylistBtn && !multiPlaylistBtn.contains(e.target) && e.target !== multiPlaylistMenu && !multiPlaylistMenu.contains(e.target)) {
+                closePlaylistMenu();
+            }
+        }, true);
+    }
+    
+    tryInit();
+})();
+
 
