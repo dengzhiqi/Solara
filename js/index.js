@@ -3454,130 +3454,162 @@ function showNotification(message, type = "success") {
 
 // --- 多播放列表逻辑 ---
 (function() {
-    // 延迟一点绑定以确保 DOM 已完成
     let initAttempts = 0;
     function tryInit() {
-        const multiPlaylistBtn = document.getElementById("multiPlaylistBtn");
-        const multiPlaylistMenu = document.getElementById("multiPlaylistMenu");
+        const btn = document.getElementById("multiPlaylistBtn");
+        const menu = document.getElementById("multiPlaylistMenu");
         
-        if (!multiPlaylistBtn || !multiPlaylistMenu) {
+        if (!btn || !menu) {
             if (initAttempts++ < 50) setTimeout(tryInit, 100);
             return;
         }
 
-        function renderMultiPlaylistMenu() {
-            multiPlaylistMenu.innerHTML = '';
-            state.playlists.forEach(pl => {
+        // 一次性设置菜单的基础样式（全内联，不依赖任何 CSS 类）
+        const isDark = document.body.classList.contains("dark-mode") || document.documentElement.classList.contains("dark-mode");
+        Object.assign(menu.style, {
+            position: 'fixed',
+            width: '200px',
+            maxHeight: '320px',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            background: isDark ? 'rgba(35, 35, 40, 0.97)' : 'rgba(255, 255, 255, 0.97)',
+            borderRadius: '12px',
+            boxShadow: '0 12px 30px rgba(0,0,0,0.35)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            zIndex: '999999',
+            display: 'none',
+            opacity: '1',
+            visibility: 'visible',
+            pointerEvents: 'auto',
+            backdropFilter: 'blur(12px)',
+            webkitBackdropFilter: 'blur(12px)'
+        });
+
+        function renderMenu() {
+            menu.innerHTML = '';
+            state.playlists.forEach(function(pl) {
                 const item = document.createElement("div");
-                item.className = "source-menu-item";
-                if(pl.id === state.activePlaylistId) {
-                    item.classList.add("active");
-                    item.style.color = "var(--primary-color, #10b981)";
-                }
-                item.innerHTML = `
-                    <span>${pl.name} (${pl.songs.length})</span>
-                    ${pl.id !== 'default' ? '<i class="fas fa-trash delete-playlist" style="margin-left:auto; cursor: pointer; color: #ef4444; font-size:14px;" title="删除"></i>' : ''}
-                `;
-                
-                const delBtn = item.querySelector('.delete-playlist');
-                if (delBtn) {
-                    delBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if(confirm(`确定要删除歌单 "${pl.name}" 吗？`)) {
-                            state.playlists = state.playlists.filter(p => p.id !== pl.id);
-                            if(state.activePlaylistId === pl.id) {
-                                switchPlaylist('default');
+                Object.assign(item.style, {
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                    padding: '12px 16px',
+                    fontSize: '0.95em',
+                    color: pl.id === state.activePlaylistId ? (isDark ? '#10b981' : '#059669') : (isDark ? '#e0e0e0' : '#333'),
+                    cursor: 'pointer',
+                    transition: 'background 0.15s ease',
+                    fontWeight: pl.id === state.activePlaylistId ? '600' : '400'
+                });
+                item.onmouseenter = function() { item.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'; };
+                item.onmouseleave = function() { item.style.background = 'transparent'; };
+
+                const span = document.createElement("span");
+                span.textContent = pl.name + " (" + pl.songs.length + ")";
+                item.appendChild(span);
+
+                if (pl.id !== 'default') {
+                    const del = document.createElement("i");
+                    del.className = "fas fa-trash";
+                    Object.assign(del.style, { marginLeft: 'auto', cursor: 'pointer', color: '#ef4444', fontSize: '13px' });
+                    del.title = "删除";
+                    del.onclick = function(ev) {
+                        ev.stopPropagation();
+                        if (confirm('确定要删除歌单 "' + pl.name + '" 吗？')) {
+                            state.playlists = state.playlists.filter(function(p) { return p.id !== pl.id; });
+                            if (state.activePlaylistId === pl.id) {
+                                doSwitch('default');
                             } else {
                                 savePlayerState();
-                                renderMultiPlaylistMenu();
+                                renderMenu();
                             }
                         }
-                    });
+                    };
+                    item.appendChild(del);
                 }
 
-                item.addEventListener('click', () => {
-                    switchPlaylist(pl.id);
-                    closePlaylistMenu();
-                });
-                multiPlaylistMenu.appendChild(item);
+                item.onclick = function() {
+                    doSwitch(pl.id);
+                    hideMenu();
+                };
+                menu.appendChild(item);
             });
 
-            const newBtn = document.createElement("div");
-            newBtn.className = "source-menu-item";
-            newBtn.style.borderTop = "1px solid rgba(255,255,255,0.1)";
-            newBtn.style.color = "var(--primary-color, #10b981)";
-            newBtn.style.justifyContent = "center";
-            newBtn.innerHTML = `<i class="fas fa-plus" style="margin-right: 8px;"></i> 新建播放列表`;
-            newBtn.addEventListener('click', () => {
-                closePlaylistMenu();
-                const name = prompt("请输入新播放列表名称：");
+            // 新建歌单按钮
+            const addItem = document.createElement("div");
+            Object.assign(addItem.style, {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '12px 16px',
+                fontSize: '0.95em',
+                color: '#10b981',
+                cursor: 'pointer',
+                borderTop: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')
+            });
+            addItem.onmouseenter = function() { addItem.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'; };
+            addItem.onmouseleave = function() { addItem.style.background = 'transparent'; };
+            addItem.innerHTML = '<i class="fas fa-plus"></i> 新建播放列表';
+            addItem.onclick = function() {
+                hideMenu();
+                var name = prompt("请输入新播放列表名称：");
                 if (name && name.trim() !== '') {
-                    const newId = 'pl_' + Date.now();
-                    state.playlists.push({
-                        id: newId,
-                        name: name.trim(),
-                        songs: []
-                    });
-                    switchPlaylist(newId);
+                    var newId = 'pl_' + Date.now();
+                    state.playlists.push({ id: newId, name: name.trim(), songs: [] });
+                    doSwitch(newId);
                 }
-            });
-            multiPlaylistMenu.appendChild(newBtn);
+            };
+            menu.appendChild(addItem);
         }
 
-        function switchPlaylist(id) {
-            const pl = state.playlists.find(p => p.id === id);
-            if(!pl) return;
+        function doSwitch(id) {
+            var pl = state.playlists.find(function(p) { return p.id === id; });
+            if (!pl) return;
             state.activePlaylistId = id;
             state.playlistSongs = pl.songs;
             savePlayerState();
-            renderMultiPlaylistMenu();
-            if(typeof renderPlaylist === "function") {
-                renderPlaylist();
-            }
+            if (typeof renderPlaylist === "function") renderPlaylist();
         }
 
-        function togglePlaylistMenu(e) {
-            if(e) {
-                e.preventDefault();
-                e.stopPropagation();
+        function showMenu() {
+            // 确保菜单在 body 顶层
+            if (menu.parentNode !== document.body) {
+                document.body.appendChild(menu);
             }
-            const isExpanded = multiPlaylistBtn.getAttribute("aria-expanded") === "true";
-            if(isExpanded) {
-                closePlaylistMenu();
+            var rect = btn.getBoundingClientRect();
+            menu.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+            menu.style.left = Math.max(10, rect.left + rect.width / 2 - 100) + 'px';
+            menu.style.transform = 'none';
+            renderMenu();
+            menu.style.display = 'block';
+            btn.setAttribute("aria-expanded", "true");
+        }
+
+        function hideMenu() {
+            menu.style.display = 'none';
+            btn.setAttribute("aria-expanded", "false");
+        }
+
+        btn.addEventListener("click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (menu.style.display === 'block') {
+                hideMenu();
             } else {
-                if (multiPlaylistMenu.parentNode !== document.body) {
-                    document.body.appendChild(multiPlaylistMenu);
-                    multiPlaylistMenu.style.position = 'fixed';
-                }
-                
-                const rect = multiPlaylistBtn.getBoundingClientRect();
-                multiPlaylistMenu.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
-                multiPlaylistMenu.style.left = (rect.left + rect.width / 2) + 'px';
-                multiPlaylistMenu.style.transform = 'translateX(-50%)';
-
-                renderMultiPlaylistMenu();
-                multiPlaylistMenu.style.display = 'block';
-                multiPlaylistMenu.classList.add("show");
-                multiPlaylistBtn.setAttribute("aria-expanded", "true");
+                showMenu();
             }
-        }
+        });
 
-        function closePlaylistMenu() {
-            multiPlaylistMenu.style.display = 'none';
-            multiPlaylistMenu.classList.remove("show");
-            multiPlaylistBtn.setAttribute("aria-expanded", "false");
-        }
-
-        multiPlaylistBtn.addEventListener("click", togglePlaylistMenu);
-        
-        document.addEventListener("click", (e) => {
-            if (e.target !== multiPlaylistBtn && !multiPlaylistBtn.contains(e.target) && e.target !== multiPlaylistMenu && !multiPlaylistMenu.contains(e.target)) {
-                closePlaylistMenu();
+        document.addEventListener("click", function(e) {
+            if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                hideMenu();
             }
-        }, true);
+        });
     }
     
     tryInit();
 })();
+
 
 
