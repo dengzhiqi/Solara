@@ -3594,13 +3594,22 @@ function showNotification(message, type = "success") {
                 span.textContent = pl.name + " (" + pl.songs.length + ")";
                 item.appendChild(span);
 
-                if (pl.id !== 'default') {
-                    const del = document.createElement("i");
-                    del.className = "fas fa-trash";
-                    Object.assign(del.style, { marginLeft: 'auto', cursor: 'pointer', color: '#ef4444', fontSize: '13px' });
-                    del.title = "删除";
-                    del.onclick = function(ev) {
-                        ev.stopPropagation();
+                const del = document.createElement("i");
+                del.className = "fas fa-trash";
+                Object.assign(del.style, { marginLeft: 'auto', cursor: 'pointer', color: '#ef4444', fontSize: '13px' });
+                del.title = pl.id === 'default' ? "清空" : "删除";
+                del.onclick = function(ev) {
+                    ev.stopPropagation();
+                    if (pl.id === 'default') {
+                        if (confirm('确定要清空默认歌单吗？')) {
+                            pl.songs = [];
+                            savePlayerState();
+                            renderMenu();
+                            if (state.activePlaylistId === 'default' && typeof renderPlaylist === "function") {
+                                renderPlaylist();
+                            }
+                        }
+                    } else {
                         if (confirm('确定要删除歌单 "' + pl.name + '" 吗？')) {
                             state.playlists = state.playlists.filter(function(p) { return p.id !== pl.id; });
                             if (state.activePlaylistId === pl.id) {
@@ -3610,9 +3619,9 @@ function showNotification(message, type = "success") {
                                 renderMenu();
                             }
                         }
-                    };
-                    item.appendChild(del);
-                }
+                    }
+                };
+                item.appendChild(del);
 
                 item.onclick = function() {
                     doSwitch(pl.id);
