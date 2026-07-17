@@ -186,6 +186,14 @@
 
         <div class="controls">
             <div class="transport-controls">
+                <div id="multiPlaylistContainer" style="position: relative; display: flex;">
+                    <button class="transport-button transport-button--mode" id="multiPlaylistBtn" type="button" title="切换歌单" aria-haspopup="listbox" aria-expanded="false">
+                        <i class="fas fa-folder-open"></i>
+                    </button>
+                    <div id="multiPlaylistMenu" class="source-menu" role="listbox" style="position: absolute; bottom: calc(100% + 15px); top: auto; left: 50%; transform: translateX(-50%); width: 180px; display: none; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                        <!-- 动态渲染播放列表 -->
+                    </div>
+                </div>
                 <button class="play-mode-btn transport-button transport-button--mode" id="playModeBtn" type="button" title="播放模式">
                     <i class="fas fa-repeat"></i>
                 </button>
