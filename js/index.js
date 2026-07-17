@@ -3577,12 +3577,27 @@ function showNotification(message, type = "success") {
             if (menu.parentNode !== document.body) {
                 document.body.appendChild(menu);
             }
-            var rect = btn.getBoundingClientRect();
-            menu.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
-            menu.style.left = Math.max(10, rect.left + rect.width / 2 - 100) + 'px';
-            menu.style.transform = 'none';
             renderMenu();
+            // 先让菜单可见但透明，以便测量尺寸
             menu.style.display = 'block';
+            menu.style.opacity = '0';
+
+            var rect = btn.getBoundingClientRect();
+            var menuWidth = menu.offsetWidth || 200;
+            var menuHeight = menu.offsetHeight || 200;
+
+            // 底部：按钮顶部往上 8px
+            var bottomVal = window.innerHeight - rect.top + 8;
+            // 左侧：居中对齐按钮，但不超出屏幕左右边界
+            var leftVal = rect.left + rect.width / 2 - menuWidth / 2;
+            leftVal = Math.max(10, Math.min(leftVal, window.innerWidth - menuWidth - 10));
+
+            menu.style.bottom = bottomVal + 'px';
+            menu.style.left = leftVal + 'px';
+            menu.style.right = 'auto';
+            menu.style.top = 'auto';
+            menu.style.transform = 'none';
+            menu.style.opacity = '1';
             btn.setAttribute("aria-expanded", "true");
         }
 
