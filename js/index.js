@@ -3539,6 +3539,18 @@ window.addEventListener("load", () => {
         if(isExpanded) {
             closePlaylistMenu();
         } else {
+            // 将菜单移到 body 以避免被 overflow 遮挡
+            if (multiPlaylistMenu.parentNode !== document.body) {
+                document.body.appendChild(multiPlaylistMenu);
+                multiPlaylistMenu.style.position = 'fixed';
+            }
+            
+            // 计算按钮位置
+            const rect = multiPlaylistBtn.getBoundingClientRect();
+            multiPlaylistMenu.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+            multiPlaylistMenu.style.left = (rect.left + rect.width / 2) + 'px';
+            multiPlaylistMenu.style.transform = 'translateX(-50%)';
+
             renderMultiPlaylistMenu();
             multiPlaylistMenu.style.display = 'block';
             multiPlaylistBtn.setAttribute("aria-expanded", "true");
