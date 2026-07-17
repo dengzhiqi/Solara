@@ -2486,7 +2486,93 @@ function createSearchResultItem(song, index) {
 
     downloadButton.appendChild(qualityMenu);
 
+    // 添加到歌单按钮
+    const addToPlaylistBtn = document.createElement("button");
+    addToPlaylistBtn.className = "action-btn";
+    addToPlaylistBtn.type = "button";
+    addToPlaylistBtn.title = "添加到歌单";
+    addToPlaylistBtn.innerHTML = '<i class="fas fa-plus"></i>';
+    addToPlaylistBtn.style.position = "relative";
+    addToPlaylistBtn.addEventListener("click", function(event) {
+        event.stopPropagation();
+        // 关闭其他已存在的歌单选择器
+        document.querySelectorAll(".add-to-playlist-popup").forEach(function(el) { el.remove(); });
+
+        var popup = document.createElement("div");
+        popup.className = "add-to-playlist-popup";
+        var isDark = document.body.classList.contains("dark-mode") || document.documentElement.classList.contains("dark-mode");
+        Object.assign(popup.style, {
+            position: 'fixed',
+            width: '180px',
+            maxHeight: '260px',
+            overflowY: 'auto',
+            background: isDark ? 'rgba(35, 35, 40, 0.97)' : 'rgba(255, 255, 255, 0.97)',
+            borderRadius: '10px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            zIndex: '999999',
+            backdropFilter: 'blur(12px)',
+            webkitBackdropFilter: 'blur(12px)',
+            padding: '4px 0'
+        });
+
+        state.playlists.forEach(function(pl) {
+            var opt = document.createElement("div");
+            Object.assign(opt.style, {
+                padding: '10px 14px',
+                cursor: 'pointer',
+                fontSize: '0.9em',
+                color: isDark ? '#e0e0e0' : '#333',
+                transition: 'background 0.15s ease'
+            });
+            opt.textContent = pl.name + " (" + pl.songs.length + ")";
+            opt.onmouseenter = function() { opt.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'; };
+            opt.onmouseleave = function() { opt.style.background = 'transparent'; };
+            opt.onclick = function(ev) {
+                ev.stopPropagation();
+                // 检查是否已存在相同歌曲
+                var exists = pl.songs.some(function(s) { return s.id === song.id && s.source === song.source; });
+                if (exists) {
+                    showNotification("该歌曲已在「" + pl.name + "」中");
+                } else {
+                    pl.songs.push(song);
+                    savePlayerState();
+                    showNotification("已添加到「" + pl.name + "」");
+                    // 如果添加到当前活跃歌单，刷新播放列表
+                    if (pl.id === state.activePlaylistId && typeof renderPlaylist === "function") {
+                        renderPlaylist();
+                    }
+                }
+                popup.remove();
+            };
+            popup.appendChild(opt);
+        });
+
+        document.body.appendChild(popup);
+        // 定位到按钮旁边
+        var rect = addToPlaylistBtn.getBoundingClientRect();
+        var popupLeft = Math.max(10, Math.min(rect.left, window.innerWidth - 190));
+        var popupTop = rect.bottom + 4;
+        if (popupTop + 260 > window.innerHeight) {
+            popupTop = rect.top - popup.offsetHeight - 4;
+            if (popupTop < 0) popupTop = 10;
+        }
+        popup.style.left = popupLeft + 'px';
+        popup.style.top = popupTop + 'px';
+
+        // 点击外部关闭
+        setTimeout(function() {
+            document.addEventListener("click", function closePopup(e) {
+                if (!popup.contains(e.target)) {
+                    popup.remove();
+                    document.removeEventListener("click", closePopup);
+                }
+            });
+        }, 0);
+    });
+
     actions.appendChild(playButton);
+    actions.appendChild(addToPlaylistBtn);
     actions.appendChild(downloadButton);
 
     item.appendChild(info);
