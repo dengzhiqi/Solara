@@ -415,8 +415,8 @@ const { initialPlaylists, initialActiveId } = (() => {
     let pls = parseJSON(safeGetLocalStorage("solara_playlists"), null);
     let activeId = safeGetLocalStorage("solara_active_playlist_id");
     
-    // 向下兼容旧版 playlistSongs
-    if (!pls) {
+    // 向下兼容旧版 playlistSongs 及防御空数组或错误数据
+    if (!pls || !Array.isArray(pls) || pls.length === 0) {
         const legacyStored = safeGetLocalStorage("playlistSongs");
         const legacySongs = parseJSON(legacyStored, []);
         const defaultList = Array.isArray(legacySongs) ? legacySongs : [];
@@ -434,7 +434,10 @@ const { initialPlaylists, initialActiveId } = (() => {
     return { initialPlaylists: pls, initialActiveId: activeId };
 })();
 
-const savedPlaylistSongs = initialPlaylists.find(p => p.id === initialActiveId).songs;
+const savedPlaylistSongs = (() => {
+    const pl = initialPlaylists.find(p => p.id === initialActiveId);
+    return pl ? pl.songs : [];
+})();
 
 const savedCurrentTrackIndex = (() => {
     const stored = safeGetLocalStorage("currentTrackIndex");
