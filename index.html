@@ -168,7 +168,7 @@
                 </div>
 
                 <div class="playlist active empty" id="playlist">
-                    <div class="playlist-label" aria-hidden="true">播放列表</div>
+                    <div class="playlist-label" aria-hidden="true">播放列表 <span id="activePlaylistName" style="font-weight:400; opacity:0.7;"></span></div>
                     <button class="clear-playlist-btn" id="clearPlaylistBtn" onclick="clearPlaylist()" title="清空播放列表">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -233,11 +233,11 @@
 <div id="multiPlaylistMenu" role="listbox" style="display:none;"></div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="js/index.js?v=2.0"></script>
+<script src="js/index.js?v=2.1"></script>
 <script>
     if (window.__SOLARA_IS_MOBILE) {
         const mobileScript = document.createElement('script');
-        mobileScript.src = 'js/mobile.js?v=2.0';
+        mobileScript.src = 'js/mobile.js?v=2.1';
         mobileScript.async = false;
         mobileScript.defer = false;
         document.body.appendChild(mobileScript);

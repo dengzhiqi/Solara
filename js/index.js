@@ -3563,14 +3563,25 @@ function showNotification(message, type = "success") {
             menu.appendChild(addItem);
         }
 
+        function updatePlaylistLabel() {
+            var nameEl = document.getElementById("activePlaylistName");
+            if (!nameEl) return;
+            var pl = state.playlists.find(function(p) { return p.id === state.activePlaylistId; });
+            nameEl.textContent = pl ? "· " + pl.name : "";
+        }
+
         function doSwitch(id) {
             var pl = state.playlists.find(function(p) { return p.id === id; });
             if (!pl) return;
             state.activePlaylistId = id;
             state.playlistSongs = pl.songs;
             savePlayerState();
+            updatePlaylistLabel();
             if (typeof renderPlaylist === "function") renderPlaylist();
         }
+
+        // 初始化时设置一次标签
+        updatePlaylistLabel();
 
         function showMenu() {
             // 确保菜单在 body 顶层
