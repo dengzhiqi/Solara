@@ -150,17 +150,7 @@
                     <div class="mobile-panel-handle" aria-hidden="true"></div>
                     <div class="mobile-panel-title" id="mobilePanelTitle">播放列表</div>
                     <div class="mobile-panel-actions">
-                        <button
-                            id="mobileClearPlaylistBtn"
-                            class="mobile-panel-action-btn mobile-panel-clear-btn"
-                            type="button"
-                            aria-label="清空播放列表"
-                            title="清空播放列表"
-                            onclick="clearPlaylist()"
-                            hidden
-                        >
-                            <i class="fas fa-trash" aria-hidden="true"></i>
-                        </button>
+
                         <button id="mobilePanelClose" class="mobile-close-btn mobile-panel-action-btn" type="button" aria-label="收起播放面板">
                             <i class="fas fa-chevron-down" aria-hidden="true"></i>
                         </button>
@@ -169,9 +159,7 @@
 
                 <div class="playlist active empty" id="playlist">
                     <div class="playlist-label" aria-hidden="true">播放列表 <span id="activePlaylistName" style="font-weight:400; opacity:0.7;"></span></div>
-                    <button class="clear-playlist-btn" id="clearPlaylistBtn" onclick="clearPlaylist()" title="清空播放列表">
-                        <i class="fas fa-trash"></i>
-                    </button>
+
                     <div class="playlist-scroll">
                         <div class="playlist-items" id="playlistItems"></div>
                     </div>
