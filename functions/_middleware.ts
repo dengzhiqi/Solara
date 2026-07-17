@@ -232,7 +232,7 @@ const loginHtml = `
     </script>
 </body>
 </html>
-\`;
+`;
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, next } = context;
@@ -250,7 +250,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       if (data.password === env.PASSWORD) {
         // 设置 Cookie
         const headers = new Headers();
-        headers.set('Set-Cookie', \`solara_auth=granted; Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax\`);
+        headers.set('Set-Cookie', `solara_auth=granted; Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax`);
         headers.set('Content-Type', 'application/json');
         return new Response(JSON.stringify({ success: true }), { headers });
       } else {
